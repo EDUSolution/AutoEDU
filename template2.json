@@ -1,0 +1,54 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "name": {
+            "type": "String"
+        },
+        "location": {
+            "type": "String"
+        },
+        "sku": {
+            "allowedValues": [
+                "D1",
+                "B1",
+                "B2",
+                "S0",
+                "S1",
+                "S2",
+                "S4",
+                "S8",
+                "S9"
+            ],
+            "type": "String"
+        },
+        "admin": {
+            "type": "String"
+        },
+        "backupBlobContainerUri": {
+            "type": "String"
+        },
+                "managedMode": {
+            "type": "Int"
+        }
+    },
+    "resources": [
+        {
+            "type": "Microsoft.AnalysisServices/servers",
+            "sku": {
+                "name": "[parameters('sku')]"
+            },
+            "name": "[parameters('name')]",
+            "apiVersion": "2017-08-01",
+            "location": "[parameters('location')]",
+            "properties": {
+                "asAdministrators": {
+                    "members": [
+                        "[parameters('admin')]"
+                    ]
+                },
+                "managedMode": "[parameters('managedMode')]"
+            }
+        }
+    ]
+}
