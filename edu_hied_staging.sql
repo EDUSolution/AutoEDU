@@ -5,7 +5,7 @@ USE HiED_Staging
 GO
 
 DROP USER IF EXISTS [HigherEDProxyUser];
-CREATE USER [HigherEDProxyUser] FOR LOGIN [HigherEDProxyUser] WITH DEFAULT_SCHEMA=[dbo];
+CREATE USER [HigherEDProxyUser] FROM LOGIN [HigherEDProxyUser] WITH DEFAULT_SCHEMA=[dbo];
 GO
 
 BEGIN
