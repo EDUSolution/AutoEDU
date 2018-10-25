@@ -1,5 +1,5 @@
 #/bin/bash
-logfile =edu_deploy.txt
+logfile=edu_deploy.txt
 rm $logfile
 set -euo pipefail
 IFS=$'\n\t'
@@ -225,6 +225,7 @@ sqlcmd -U $adminlogin -S "${servername}.database.windows.net" -P "$password" -d 
 # DataStaging
 sqlcmd -U $adminlogin -S "${servername}.database.windows.net" -P "$password" -d HiEd_Staging -i "edu_hied_staging.sql"
 
+echo "Deployment log output"
 echo "This is your Admin User,Password and Proxy Password:"  >> edu_deploy.txt
 echo $adminlogin $password $proxypassword >> edu_deploy.txt
 echo "This is your Azure location zone:" $zone >> edu_deploy.txt
