@@ -24,26 +24,26 @@ declare zone=""
 
 # Initialize parameters specified from command line
 while getopts ":i:g:p:pp:s:l:" arg; do
-        case "${arg}" in
-                i)
-                        subscriptionID=${OPTARG}
-                        ;;
-                g)
-                        groupname=${OPTARG}
-                        ;;
-                p)
-                        password=${OPTARG}
-                        ;;
-                pp)
-                        proxypassword=${OPTARG}
-                        ;;
-                s)
-                        servername=${OPTARG}
-                        ;;
-                l)
-                        zone=${OPTARG}
-                        ;;
-                esac
+	case "${arg}" in
+		i)
+			subscriptionID=${OPTARG}
+			;;
+		g)
+			groupname=${OPTARG}
+			;;
+		p)
+			password=${OPTARG}
+			;;
+		pp)
+			proxypassword=${OPTARG}
+			;;
+		s)
+			servername=${OPTARG}
+			;;
+		l)
+			zone=${OPTARG}
+			;;
+		esac
 done
 shift $((OPTIND-1))
 
@@ -84,48 +84,48 @@ echo "Here is your Subscription ID Information"
 az account show | grep id
 
 if [[ -z "$subscriptionID" ]]; then
-        echo "Copy and Paste the Subscription ID from above, without the quotes to be used:"
-        read subscriptionID
-        [[ "${subscriptionID:?}" ]]
+	echo "Copy and Paste the Subscription ID from above, without the quotes to be used:"
+	read subscriptionID
+	[[ "${subscriptionID:?}" ]]
 fi
 
 if [[ -z "$groupname" ]]; then
-        echo "What is the name for the resource group to create the deployment in? Example: EDU_Group "
-        echo "Enter your Resource Group name:"
-        read groupname
-        [[ "${groupname:?}" ]]
+	echo "What is the name for the resource group to create the deployment in? Example: EDU_Group "
+	echo "Enter your Resource Group name:"
+	read groupname
+	[[ "${groupname:?}" ]]
 fi
 
 if [[ -z "$password" ]]; then
-        echo "Your database login will be sqladmin and you'll need a password for this login?"
+	echo "Your database login will be sqladmin and you'll need a password for this login?"
         echo "Password must meet requirements for sql server, including capilatization, special characters.  Example: SQLAdm1nt3st1ng!"
-        echo "Enter the login password "
-        read password
-        [[ "${password:?}" ]]
+	echo "Enter the login password "
+	read password
+	[[ "${password:?}" ]]
 fi
 
 if [[ -z "$proxypassword" ]]; then
         echo "This password is for the proxy user that will work wtih the objects in the databsaes. Special characters can cause issues, use only number and letters for this password.  Example: SQLAdm1nt3st1ng"
-        echo "Enter a password for your database proxy login:"
-        read proxypassword
-        [[ "${proxypassword:?}" ]]
+	echo "Enter a password for your database proxy login:"
+	read proxypassword
+	[[ "${proxypassword:?}" ]]
 fi
 
 if [[ -z "$servername" ]]; then
-        echo "What would you like for the name of the server that will house your sql databases? Example hiededusql1 "
-        echo "Enter the server name:"
-        read servername
-        [[ "${servername:?}" ]]
+	echo "What would you like for the name of the server that will house your sql databases? Example hiededusql1 "
+	echo "Enter the server name:"
+	read servername
+	[[ "${servername:?}" ]]
 fi
 
 if [[ -z "$zone" ]]; then
-        echo "Finally, what will be the Azure location zone to create everything in? Example eastus or centralus "
-        echo "Enter the location name:"
-        read zone
-        [[ "${zone:?}" ]]
+	echo "Finally, what will be the Azure location zone to create everything in? Example eastus or centralus "
+	echo "Enter the location name:"
+	read zone
+	[[ "${zone:?}" ]]
 fi
 
-# The ip address range that you want to allow to access your DB.
+# The ip address range that you want to allow to access your DB. 
 # This rule is used by Visual Studio and SSMS to access and load data.  The firewall is dynamically offered for the workstation, but not for the Azure Cloud Shell.
 # Added dynamic pull for IP Address for firewall rule 10/23/2018, KGorman
 # Added a logfile and a static sqladmin for the database login.
@@ -143,37 +143,37 @@ export adminlogin=sqladmin
 # Set default subscription ID if not already set by customer.
 # Created on 10/14/2018
 az account set --subscription $subscriptionID
-
+ 
 # Create a resource group
 az group create \
-        --name $groupname \
-        --location $zone
+	--name $groupname \
+	--location $zone
 
 # Create a logical server in the resource group
 az sql server create \
-        --name $servername \
-        --resource-group $groupname \
-        --location $zone  \
-        --admin-user $adminlogin \
-        --admin-password $password
+	--name $servername \
+	--resource-group $groupname \
+	--location $zone  \
+	--admin-user $adminlogin \
+	--admin-password $password
 
 
 # Configure a firewall rule for the server
 az sql server firewall-rule create \
-        --resource-group $groupname \
-        --server $servername \
-        -n AllowYourIp \
-        --start-ip-address $startip \
-        --end-ip-address $endip
+	--resource-group $groupname \
+	--server $servername \
+	-n AllowYourIp \
+	--start-ip-address $startip \
+	--end-ip-address $endip
 
 az configure --defaults sql-server=$servername
 # Create a database for the staging database
 az sql db create \
-        --resource-group $groupname \
-        --name HiEd_Staging \
+	--resource-group $groupname \
+	--name HiEd_Staging \
         --service-objective S0 \
         --capacity 10 \
-        --zone-redundant false
+	--zone-redundant false 
 
 # Create a database  for the data warehouse
 az sql db create \
@@ -181,7 +181,7 @@ az sql db create \
         --name HiEd_DW \
         --service-objective S0 \
         --capacity 10 \
-        --zone-redundant false
+        --zone-redundant false 
 
 
 # Deploy Azure Analysis Server and ADF
@@ -196,7 +196,7 @@ if [ $?  == 0 ];
  then
         echo "Azure Data Factory has been successfully deployed"
 fi
-
+ 
 echo "You will be requested for the Azure administrator for the Analysis server: Example-  kegorman@microsoft.com"
 
 (
