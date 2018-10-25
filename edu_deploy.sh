@@ -1,5 +1,6 @@
 #/bin/bash
-rm edu_deploy.txt
+logfile =edu_deploy.txt
+rm $logfile
 set -euo pipefail
 IFS=$'\n\t'
 
@@ -135,7 +136,6 @@ echo "getting IP Address for Azure Cloud Shell for firewall rule"
 export myip=$(curl http://ifconfig.me)
 export startip=$myip
 export endip=$myip
-export logfile="/home/kellyn/EDU/ck_views.log"
 export adminlogin=sqladmin
 
 #---------------------------------------------------------------
@@ -225,9 +225,6 @@ sqlcmd -U $adminlogin -S "${servername}.database.windows.net" -P "$password" -d 
 # DataStaging
 sqlcmd -U $adminlogin -S "${servername}.database.windows.net" -P "$password" -d HiEd_Staging -i "edu_hied_staging.sql"
 
-# Check for data and push to output file
-sqlcmd -U $adminlogin -S "${servername}.database.windows.net" -P "$password" -d HiEd_Staging -i "ck_views.sql" > $logfile
-
 echo "This is your Admin User,Password and Proxy Password:"  >> edu_deploy.txt
 echo $adminlogin $password $proxypassword >> edu_deploy.txt
 echo "This is your Azure location zone:" $zone >> edu_deploy.txt
@@ -235,5 +232,8 @@ echo "This is the SQL Server your created for the databases:" >> edu_deploy.txt
 echo $servername >> edu_deploy.txt
 echo "This is the subscription deployed to and the Firewall IP:" >> edu_deploy.txt
 echo $subscriptionID $myip >> edu_deploy.txt
+echo "-------------------------------------------------------------------------------------------------------------------"
+# Check for data and push to output file
+sqlcmd -U $adminlogin -S "${servername}.database.windows.net" -P "$password" -d HiEd_Staging -i "ck_views.sql" > $logfile
 
 echo "Part II is now complete."
