@@ -28,7 +28,7 @@
         "backupBlobContainerUri": {
             "type": "String"
         },
-                "managedMode": {
+        "managedMode": {
             "type": "Int"
         }
     },
@@ -52,3 +52,4 @@
         }
     ]
 }
+
