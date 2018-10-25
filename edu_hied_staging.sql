@@ -3,8 +3,7 @@
 /* Create proxy user and set permissions */
 USE HiED_Staging
 GO
-
-DROP USER IF EXISTS [HigherEDProxyUser];
+/*
 CREATE USER [HigherEDProxyUser] FROM LOGIN [HigherEDProxyUser] WITH DEFAULT_SCHEMA=[dbo];
 GO
 
@@ -17,6 +16,7 @@ EXEC sp_addrolemember N'db_ddladmin ', [HigherEDProxyUser];
 GRANT EXECUTE TO [HigherEDProxyUser];
 END;
 GO
+*/
 
 
 /* Create Tables for Staging */

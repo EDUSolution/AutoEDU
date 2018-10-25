@@ -857,14 +857,12 @@ CREATE Proc [dbo].[uspUnknownRow]
 @action varchar(10)
 )
 AS
-
 /*Declare internal variables. Values are set within stored procedure*/
 Declare
 @sqlquery varchar(max),
 @columns varchar(max),
 @identity varchar(100),
 @values varchar(max)
-
 /*Returns the column identified as the identity column*/
 SELECT @identity =
          COLUMN_NAME
@@ -894,7 +892,9 @@ WHERE
       AND c.TABLE_SCHEMA = @schema
       AND c2.is_computed = 0
       AND c.TABLE_SCHEMA = s.name
-Order by ORDINAL_POSITION
+Order by ORDINAL_POSITION;
+
+GO
 
 --SET @columns = @columns +']'
 /*
@@ -910,7 +910,7 @@ Post-Deployment Script Template
 */
 
 /* run in user database HigherED_DW */
-DROP USER IF EXISTS [HigherEDProxyUser];
+/*
 CREATE USER [HigherEDProxyUser] FROM LOGIN [HigherEDProxyUser] WITH DEFAULT_SCHEMA=[dbo];
 GO
 
@@ -923,6 +923,6 @@ EXEC sp_addrolemember N'db_ddladmin ', [HigherEDProxyUser];
 GRANT EXECUTE TO [HigherEDProxyUser];
 END;
 GO
-
-GO      
+*/
+     
 

@@ -1,4 +1,5 @@
 #/bin/bash
+rm edu_deploy.txt
 set -euo pipefail
 IFS=$'\n\t'
 
@@ -43,7 +44,7 @@ while getopts ":i:g:p:pp:s:l:" arg; do
                 l)
                         zone=${OPTARG}
                         ;;
-                 esac
+                esac
 done
 shift $((OPTIND-1))
 
@@ -105,7 +106,7 @@ if [[ -z "$password" ]]; then
 fi
 
 if [[ -z "$proxypassword" ]]; then
-        echo "This password is for the proxy user that will work wtih the objects in the databases.  Use only letters and numbers, as special characters can create issues.  Example: SQLAdm1nt3st1ng"
+        echo "This password is for the proxy user that will work wtih the objects in the databsaes. Special characters can cause issues, use only number and letters for this password.  Example: SQLAdm1nt3st1ng"
         echo "Enter a password for your database proxy login:"
         read proxypassword
         [[ "${proxypassword:?}" ]]
@@ -139,7 +140,42 @@ export adminlogin=sqladmin
 
 #---------------------------------------------------------------
 # Customers should only update the variables in the top of the script, nothing below this line.
-#--
+#---------------------------------------------------------------
+
+# Set default subscription ID if not already set by customer.
+# Created on 10/14/2018
+az account set --subscription $subscriptionID
+
+# Create a resource group
+az group create \
+        --name $groupname \
+        --location $zone
+
+# Create a logical server in the resource group
+az sql server create \
+        --name $servername \
+        --resource-group $groupname \
+        --location $zone  \
+        --admin-user $adminlogin \
+        --admin-password $password
+
+
+# Configure a firewall rule for the server
+az sql server firewall-rule create \
+        --resource-group $groupname \
+        --server $servername \
+        -n AllowYourIp \
+        --start-ip-address $startip \
+        --end-ip-address $endip
+
+az configure --defaults sql-server=$servername
+# Create a database for the staging database
+az sql db create \
+        --resource-group $groupname \
+        --name HiEd_Staging \
+        --service-objective S0 \
+        --capacity 10 \
+        --zone-redundant false
 
 # Create a database  for the data warehouse
 az sql db create \
@@ -182,7 +218,7 @@ echo "This Completes Part I, the physical resources deployment, Part II will now
 # Added proxy login to support scripts and added check log for post deploy. 10/25/2018
 # DataWarehouse
 echo "Part II logs into the SQL Server and deploys the logical objects and support structures."
-sqlcmd -U $adminlogin -S"${servername}.database.windows.net" -P "$password" -d master -Q "CREATE LOGIN ProxyUser WITH PASSWORD = '${proxypassword}'; "
+sqlcmd -U $adminlogin -S"${servername}.database.windows.net" -P "$password" -d master -Q "CREATE LOGIN HigherEDProxyUser WITH PASSWORD = '${proxypassword}'; "
 
 sqlcmd -U $adminlogin -S "${servername}.database.windows.net" -P "$password" -d HiEd_DW -i "edu_hied_DW.sql"
 
@@ -192,9 +228,12 @@ sqlcmd -U $adminlogin -S "${servername}.database.windows.net" -P "$password" -d 
 # Check for data and push to output file
 sqlcmd -U $adminlogin -S "${servername}.database.windows.net" -P "$password" -d HiEd_Staging -i "ck_views.sql" > $logfile
 
-echo "This is your servername:" $servername >> edu_deploy.txt
-echo "This is your Admin User and Password:" $adminlogin |"/"| $password >> edu_deploy.txt
+echo "This is your Admin User,Password and Proxy Password:"  >> edu_deploy.txt
+echo $adminlogin $password $proxypassword >> edu_deploy.txt
 echo "This is your Azure location zone:" $zone >> edu_deploy.txt
-echo "This is the subscription deployed to and the Firewall IP:" ${subscriptionID} |", "|${myip} >> edu_deploy.txt
+echo "This is the SQL Server your created for the databases:" >> edu_deploy.txt
+echo $servername >> edu_deploy.txt
+echo "This is the subscription deployed to and the Firewall IP:" >> edu_deploy.txt
+echo $subscriptionID $myip >> edu_deploy.txt
 
 echo "Part II is now complete."
