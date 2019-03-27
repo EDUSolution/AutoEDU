@@ -183,6 +183,8 @@ az sql db create \
         --capacity 10 \
         --zone-redundant false 
 
+# Install the Azure DevOps Extension to be used with deployment of Azure DevOps ADF Pipelines
+az extension add --name azure-devops
 
 # Deploy Azure Analysis Server and ADF
 # Added 10/16/2018
