@@ -216,14 +216,16 @@ echo "This Completes Part I, the physical resources deployment, Part II will now
 # Populate Database Objects
 # Added 10/23/18, KGorman
 # Added proxy login to support scripts and added check log for post deploy. 10/25/2018
+# Updated to no longer just DDL, but added data to be loaded as part of DW and Staging data
 # DataWarehouse
 echo "Part II logs into the SQL Server and deploys the logical objects and support structures."
 sqlcmd -U $adminlogin -S"${servername}.database.windows.net" -P "$password" -d master -Q "CREATE LOGIN HigherEDProxyUser WITH PASSWORD = '${proxypassword}'; "
 
-sqlcmd -U $adminlogin -S "${servername}.database.windows.net" -P "$password" -d HiEd_DW -i "edu_hied_DW.sql"
+sqlcmd -U $adminlogin -S "${servername}.database.windows.net" -P "$password" -d HiEd_DW -i "hied_dw.sql"
 
 # DataStaging
-sqlcmd -U $adminlogin -S "${servername}.database.windows.net" -P "$password" -d HiEd_Staging -i "edu_hied_staging.sql"
+sqlcmd -U $adminlogin -S "${servername}.database.windows.net" -P "$password" -d HiEd_Staging -i "hied_staging_enroll.sql"
+sqlcmd -U $adminlogin -S "${servername}.database.windows.net" -P "$password" -d HiEd_Staging -i "hied_staging_data.sql"
 
 echo "This is your Admin User,Password and Proxy Password:"  > edu_deploy.txt
 echo $adminlogin $password $proxypassword >> edu_deploy.txt
