@@ -13,7 +13,7 @@ IFS=$'\n\t'
 # IFS: deters from bugs, looping arrays or arguments (e.g. $@)
 #---------------------------------------------------------------
 
-usage() { echo "Usage: $0 -i <subscriptionID> -g <groupname> -p <password> -pp <proxypassword> -s <servername> -l <zone>" 1>&2; exit 1; }
+usage() { echo "Usage: $0 -i <subscriptionID> -g <groupname> -p <password> -pp <proxypassword> -s <servername> -l <zone> -d <data>" 1>&2; exit 1; }
 
 declare subscriptionID=""
 declare groupname=""
@@ -21,9 +21,10 @@ declare password=""
 declare proxypassword=""
 declare servername=""
 declare zone=""
+declare data=""
 
 # Initialize parameters specified from command line
-while getopts ":i:g:p:pp:s:l:" arg; do
+while getopts ":i:g:p:pp:s:l:d:" arg; do
 	case "${arg}" in
 		i)
 			subscriptionID=${OPTARG}
@@ -42,6 +43,9 @@ while getopts ":i:g:p:pp:s:l:" arg; do
 			;;
 		l)
 			zone=${OPTARG}
+			;;
+		d)
+			data=${OPTARG}
 			;;
 		esac
 done
@@ -119,10 +123,16 @@ if [[ -z "$servername" ]]; then
 fi
 
 if [[ -z "$zone" ]]; then
-	echo "Finally, what will be the Azure location zone to create everything in? Example eastus or centralus "
+	echo "What will be the Azure location zone to create everything in? Example eastus or centralus "
 	echo "Enter the location name:"
 	read zone
 	[[ "${zone:?}" ]]
+fi
+
+if [[ -z "$data" ]]; then
+	echo "Finally, will you be using the example data load vs. using your own data?  If using the example data, type in <Y> for yes."
+	read data
+	[[ "${data:?}" ]]
 fi
 
 # The ip address range that you want to allow to access your DB. 
@@ -139,6 +149,9 @@ export adminlogin=sqladmin
 #---------------------------------------------------------------
 # Customers should only update the variables in the top of the script, nothing below this line.
 #---------------------------------------------------------------
+
+# Unzip data load files
+unzip hied_data.zip
 
 # Set default subscription ID if not already set by customer.
 # Created on 10/14/2018
@@ -219,13 +232,29 @@ echo "This Completes Part I, the physical resources deployment, Part II will now
 # Updated to no longer just DDL, but added data to be loaded as part of DW and Staging data
 # DataWarehouse
 echo "Part II logs into the SQL Server and deploys the logical objects and support structures."
-sqlcmd -U $adminlogin -S"${servername}.database.windows.net" -P "$password" -d master -Q "CREATE LOGIN HigherEDProxyUser WITH PASSWORD = '${proxypassword}'; "
 
-sqlcmd -U $adminlogin -S "${servername}.database.windows.net" -P "$password" -d HiEd_DW -i "hied_dw.sql"
+if [ $data -eq 'Y' ]
+then
+  echo "Loading Example Schema and Data-  This will take about an hour to perform the data load."
+  sqlcmd -U $adminlogin -S"${servername}.database.windows.net" -P "$password" -d master -Q "CREATE LOGIN HigherEDProxyUser WITH PASSWORD = '${proxypassword}'; "
 
-# DataStaging
-sqlcmd -U $adminlogin -S "${servername}.database.windows.net" -P "$password" -d HiEd_Staging -i "hied_staging_enroll.sql"
-sqlcmd -U $adminlogin -S "${servername}.database.windows.net" -P "$password" -d HiEd_Staging -i "hied_staging_data.sql"
+  sqlcmd -U $adminlogin -S "${servername}.database.windows.net" -P "$password" -d HiEd_DW -i "hied_dw.sql"
+
+  # DataStaging
+  sqlcmd -U $adminlogin -S "${servername}.database.windows.net" -P "$password" -d HiEd_Staging -i "hied_staging_enroll.sql"
+  sqlcmd -U $adminlogin -S "${servername}.database.windows.net" -P "$password" -d HiEd_Staging -i "hied_staging_data.sql"
+  echo "Data and object build for both databases is complete.  Counts for views in last steps to log should have counts in each."
+else
+  echo "Request is for schema only, no data, the objects, no data will be built inside the databases only."
+  sqlcmd -U $adminlogin -S"${servername}.database.windows.net" -P "$password" -d master -Q "CREATE LOGIN HigherEDProxyUser WITH PASSWORD = '${proxypassword}'; "
+
+  sqlcmd -U $adminlogin -S "${servername}.database.windows.net" -P "$password" -d HiEd_DW -i "edu_ddl_dw.sql"
+
+  # DataStaging
+  sqlcmd -U $adminlogin -S "${servername}.database.windows.net" -P "$password" -d HiEd_Staging -i "edu_ddl_staging.sql"
+  echo "Object Build for both databases is complete.  No data was loaded, so zero rows are expected in counts of views"
+fi
+
 
 echo "This is your Admin User,Password and Proxy Password:"  > edu_deploy.txt
 echo $adminlogin $password $proxypassword >> edu_deploy.txt
