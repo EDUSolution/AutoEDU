@@ -155,7 +155,7 @@ if [[ -z "$zone" ]]; then
 fi
 
 if [[ -z "$data" ]]; then
-	echo "Finally, will you be using the example data load vs. using your own data?  If using the example data, answer 1 for yes or 2 for no."
+	echo "Finally, will you be using the example data load vs. using your own data?  If using the example data, answer yes otherwise no if you wish to skip the example data."
 	read data
 	[[ "${data:?}" ]]
 fi
@@ -170,7 +170,6 @@ export myip=$(curl http://ifconfig.me)
 export startip=$myip
 export endip=$myip
 export logfile=./$jobrun.txt
-rm $logfile
 export adminlogin=sqladmin
 export schema='$schema'
 
@@ -226,7 +225,7 @@ EOF
 # Unzip data load files
 rm -rf ./hied_data
 unzip hied_data.zip
-mv ./hied_data/* ../.
+mv ./hied_data/* .
 
 # Set default subscription ID if not already set by customer.
 # Created on 10/14/2018
@@ -308,24 +307,18 @@ echo "This Completes Part I, the physical resources deployment, Part II will now
 # DataWarehouse
 echo "Part II logs into the SQL Server and deploys the logical objects, support structures and data if requested."
 
-if [ $data -eq 1 ]
+if [ "$data" == "yes" ];
 then
   echo "Loading Example Schema and Data-  This will take about an hour to perform the data load."
   sqlcmd -U $adminlogin -S"${servername}.database.windows.net" -P "$password" -d master -Q "CREATE LOGIN HigherEDProxyUser WITH PASSWORD = '${proxypassword}'; "
-
   sqlcmd -U $adminlogin -S "${servername}.database.windows.net" -P "$password" -d HiEd_DW -i "hied_dw.sql"
-
-  # DataStaging
   sqlcmd -U $adminlogin -S "${servername}.database.windows.net" -P "$password" -d HiEd_Staging -i "hied_staging_enroll.sql"
   sqlcmd -U $adminlogin -S "${servername}.database.windows.net" -P "$password" -d HiEd_Staging -i "hied_staging_data.sql"
   echo "Data and object build for both databases is complete.  Counts for views in last steps to log should have counts in each."
 else
-  echo "Request is for schema only, no data, the objects, no data will be built inside the databases only."
+  echo "Request is for schema only, no data, the objects, no data will be built inside the databases."
   sqlcmd -U $adminlogin -S"${servername}.database.windows.net" -P "$password" -d master -Q "CREATE LOGIN HigherEDProxyUser WITH PASSWORD = '${proxypassword}'; "
-
   sqlcmd -U $adminlogin -S "${servername}.database.windows.net" -P "$password" -d HiEd_DW -i "edu_ddl_dw.sql"
-
-  # DataStaging
   sqlcmd -U $adminlogin -S "${servername}.database.windows.net" -P "$password" -d HiEd_Staging -i "edu_ddl_staging.sql"
   echo "Object Build for both databases is complete.  No data was loaded, so zero rows are expected in counts of views"
 fi
