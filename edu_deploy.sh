@@ -141,14 +141,15 @@ if [[ -z "$adfname" ]]; then
 fi
 
 if [[ -z "$aasname" ]]; then
-	echo "What would you like for the name of the Azure Analysis Service?  This MUST ALSO be GLOBALLY UNIQUE, all small leteters.  Example xxxxxaas1 "
+	echo "What would you like for the name of the Azure Analysis Service?  This MUST ALSO be GLOBALLY UNIQUE, all small letters.  Example xxxxxaas1 "
 	echo "Enter the Azure Analysis Services name:"
 	read aasname
 	[[ "${aasname:?}" ]]
 fi
 
 if [[ -z "$zone" ]]; then
-	echo "What will be the Azure location zone to create everything in? Example eastus or centralus "
+	echo "What will be the Azure location zone to create everything in? Choose from the list below: "
+	az account list-locations | grep name | awk  '{print $2}'| tr -d \"\, | grep us | grep -v australia
 	echo "Enter the location name:"
 	read zone
 	[[ "${zone:?}" ]]
